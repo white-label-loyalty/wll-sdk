@@ -1,0 +1,22 @@
+name: Build TypeScript SDK
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: oven-sh/setup-bun@v2
+    - run: bun install
+    # TODO: Use API with API Key in secret
+    - run: bun dev gen https://gist.githubusercontent.com/iiJoshJenkins/68fa5e1a70ab6d0c05796f66d9644f96/raw/6a4a5b2c04c8658ae34dadfd71e191d0d82c649d/spec.json
+    - name: Add tarball to artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: WllRewardsSdk
+        path: sdk/typescript/wll-rewards-sdk.tgz
