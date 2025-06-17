@@ -13,8 +13,10 @@ jobs:
     - uses: actions/checkout@v4
     - uses: oven-sh/setup-bun@v2
     - run: bun install
-    # TODO: Use API with API Key in secret
-    - run: bun dev gen https://gist.githubusercontent.com/iiJoshJenkins/68fa5e1a70ab6d0c05796f66d9644f96/raw/6a4a5b2c04c8658ae34dadfd71e191d0d82c649d/spec.json
+    - name: build
+      env:
+        API_KEY: ${{ secrets.API_KEY }}
+      run: bun dev gen https://api.staging.rewards.wlloyalty.net/v1/openapi.json -k "$API_KEY"
     - name: Add tarball to artifacts
       uses: actions/upload-artifact@v4
       with:
