@@ -1,9 +1,0 @@
-image: oven/bun:latest
-pipelines:
-  default:
-    - step:
-        script:
-          - bun install
-          - bun dev gen https://gist.githubusercontent.com/iiJoshJenkins/68fa5e1a70ab6d0c05796f66d9644f96/raw/6a4a5b2c04c8658ae34dadfd71e191d0d82c649d/spec.json
-        artifacts:
-          - sdk/typescript/wll-rewards-sdk.tgz
