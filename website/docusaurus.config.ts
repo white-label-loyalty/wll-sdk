@@ -55,6 +55,12 @@ const config: Config = {
         },
         {
           type: 'docSidebar',
+          sidebarId: 'pythonSidebar',
+          position: 'left',
+          label: 'Python',
+        },
+        {
+          type: 'docSidebar',
           sidebarId: 'javaSidebar',
           position: 'left',
           label: 'Java',
