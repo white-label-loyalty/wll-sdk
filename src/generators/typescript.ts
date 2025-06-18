@@ -56,6 +56,11 @@ export class TypescriptGenerator extends Generator {
   }
 
   private async build() {
+    await spawn({
+      cmd: ['rm', '-rf', 'dist'],
+      cwd: './sdk/typescript'
+    }).exited
+
     console.log("Building SDK");
     const buildProc = spawn({
       cmd: ['npx', '-y', 'tsc', '--build'],

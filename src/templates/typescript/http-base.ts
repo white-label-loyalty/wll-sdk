@@ -25,7 +25,7 @@ export class HttpBase {
     Object.entries(options.query ?? {}).forEach(([key, value]) => {
       searchParams.set(key, value.toString());
     })
-    const url = `${this._baseUrl}${endpoint}` + (options?.query?.length > 0 ? "?" + searchParams.toString() : '');
+    let url = `${this._baseUrl}${endpoint}` + (options?.query?.length > 0 ? "?" + searchParams.toString() : '');
 
     const region = this._baseUrl.includes('.us.') ? 'US' : 'EU';
     let authorization = `Bearer ${await this._authProvider.getToken(
@@ -46,7 +46,7 @@ export class HttpBase {
     };
     if(options.parameters) {
       for(const [key, value] of Object.entries(options.parameters)) {
-        url.replace(`{${key}}`, value);
+        url = url.replace(`{${key}}`, value);
       }
     }
 
@@ -54,7 +54,6 @@ export class HttpBase {
       headers,
       method: options.method,
       body: options.body ? JSON.stringify(options.body) : undefined,
-      
     };
 
     return fetch(url, config).then(async (response) => {
