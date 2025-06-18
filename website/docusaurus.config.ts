@@ -12,6 +12,7 @@ const config: Config = {
 
   url: 'https://white-label-loyalty.github.io',
   baseUrl: '/wll-sdk',
+  trailingSlash: true,
 
   organizationName: 'white-label-loyalty',
   projectName: 'wll-sdk',
