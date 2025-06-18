@@ -4,5 +4,5 @@ export enum Region {
 }
 
 export abstract class AuthProvider {
-  public abstract getToken(region: Region): Promise<string>
+  public abstract getToken(region: Region): Promise<string>;
 }

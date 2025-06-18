@@ -2,23 +2,23 @@ name: Build TypeScript SDK
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ['main']
   pull_request:
-    branches: [ "main" ]
+    branches: ['main']
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - uses: oven-sh/setup-bun@v2
-    - run: bun install
-    - name: build
-      env:
-        API_KEY: ${{ secrets.API_KEY }}
-      run: bun dev gen https://api.staging.rewards.wlloyalty.net/v1/openapi.json -k "$API_KEY"
-    - name: Add tarball to artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: WllRewardsSdk
-        path: sdk/typescript/wll-rewards-sdk.tgz
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install
+      - name: build
+        env:
+          API_KEY: ${{ secrets.API_KEY }}
+        run: bun dev gen https://api.staging.rewards.wlloyalty.net/v1/openapi.json -k "$API_KEY"
+      - name: Add tarball to artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: WllRewardsSdk
+          path: sdk/typescript/wll-rewards-sdk.tgz

@@ -7,7 +7,7 @@ In White Label Loyalty services we typically have two authentication methods. "A
 Admin authentication is provided via the `AdminAuthProvider`.
 
 ```ts
-import { AdminAuthProvider } from "wll-rewards-sdk";
+import { AdminAuthProvider } from 'wll-rewards-sdk';
 ```
 
 ### Example
@@ -15,15 +15,15 @@ import { AdminAuthProvider } from "wll-rewards-sdk";
 Here is a minimal example of initializing the WLL Rewards SDK with an `AdminAuthProvider`
 
 ```ts
-import { WLLRewardsSdk, AdminAuthProvider } from "wll-rewards-sdk";
+import { WLLRewardsSdk, AdminAuthProvider } from 'wll-rewards-sdk';
 
 new WLLRewardsSdk({
-  apiKey: "<your-api-key>",
+  apiKey: '<your-api-key>',
   authProvider: new AdminAuthProvider({
-    clientId: "<your-client-id>",
-    clientSecret: "<your-client-secret>",
+    clientId: '<your-client-id>',
+    clientSecret: '<your-client-secret>',
   }),
-  baseUrl: "https://api.staging.rewards.wlloyalty.net/v1",
+  baseUrl: 'https://api.staging.rewards.wlloyalty.net/v1',
 });
 ```
 
@@ -48,7 +48,7 @@ The current regions supported by the SDK are:
 Tenant authentication is provided via the `StaticAuthProvider`.
 
 ```ts
-import { StaticAuthProvider } from "wll-rewards-sdk";
+import { StaticAuthProvider } from 'wll-rewards-sdk';
 ```
 
 The `StaticAuthProvider` is a simple implementation of `AuthProvider` that takes a token in its constructor and only returns that token. Essentially just a constant variable of a token. This can be used for tenant authentication after completing your authentication flow, alternatively it can be used for admin authentication if an admin token is stored in the provider.
@@ -58,7 +58,7 @@ The `StaticAuthProvider` is a simple implementation of `AuthProvider` that takes
 Here is a minimal example of initializing the WLL Rewards SDK with a `StaticAuthProvider`
 
 ```ts
-import { WLLRewardsSdk, StaticAuthProvider } from "wll-rewards-sdk";
+import { WLLRewardsSdk, StaticAuthProvider } from 'wll-rewards-sdk';
 
 async function tenantTokenFlow(): Promise<string> {
   // Your implementation.
@@ -67,11 +67,11 @@ async function tenantTokenFlow(): Promise<string> {
 const token = await tenantTokenFlow();
 
 new WLLRewardsSdk({
-  apiKey: "<your-api-key>",
+  apiKey: '<your-api-key>',
   authProvider: new StaticAuthProvider({
     token,
   }),
-  baseUrl: "https://api.staging.rewards.wlloyalty.net/v1",
+  baseUrl: 'https://api.staging.rewards.wlloyalty.net/v1',
 });
 ```
 
@@ -87,7 +87,7 @@ In some use cases it may be necessary to implement your own AuthProvider in this
 
 ```ts
 abstract class AuthProvider {
-  public abstract getToken(region: Region): Promise<string>
+  public abstract getToken(region: Region): Promise<string>;
 }
 ```
 
@@ -96,19 +96,19 @@ abstract class AuthProvider {
 Here is a minimal example of a custom implemented auth provider.
 
 ```ts
-import { WLLRewardsSdk, AuthProvider } from "wll-rewards-sdk"
-import { fetchRemoteToken } from "../path/to/fetchRemoteToken"
+import { WLLRewardsSdk, AuthProvider } from 'wll-rewards-sdk';
+import { fetchRemoteToken } from '../path/to/fetchRemoteToken';
 
 class RemoteAuthProvider implements AuthProvider {
-    public async getToken(region: any): Promise<string> {
-        const token = await fetchRemoteToken();
-        return token;
-    }
+  public async getToken(region: any): Promise<string> {
+    const token = await fetchRemoteToken();
+    return token;
+  }
 }
 
 new WLLRewardsSdk({
-  apiKey: "<your-api-key>",
+  apiKey: '<your-api-key>',
   authProvider: new RemoteAuthProvider(),
-  baseUrl: "https://api.staging.rewards.wlloyalty.net/v1",
+  baseUrl: 'https://api.staging.rewards.wlloyalty.net/v1',
 });
 ```

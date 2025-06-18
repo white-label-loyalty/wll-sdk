@@ -1,0 +1,4 @@
+# Ignore artifacts:
+website/build
+website/.docusaurus
+sdk

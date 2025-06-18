@@ -1,5 +1,5 @@
-import {themes as prismThemes} from 'prism-react-renderer';
-import type {Config} from '@docusaurus/types';
+import { themes as prismThemes } from 'prism-react-renderer';
+import type { Config } from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 
 const config: Config = {
@@ -19,7 +19,7 @@ const config: Config = {
 
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
-  
+
   i18n: {
     defaultLocale: 'en',
     locales: ['en'],
@@ -33,7 +33,7 @@ const config: Config = {
           sidebarPath: './sidebars.ts',
           routeBasePath: '/',
           remarkPlugins: [
-            [require('@docusaurus/remark-plugin-npm2yarn'), {sync: true}],
+            [require('@docusaurus/remark-plugin-npm2yarn'), { sync: true }],
           ],
         },
         blog: false,
@@ -74,7 +74,7 @@ const config: Config = {
     },
     colorMode: {
       respectPrefersColorScheme: true,
-    }
+    },
   } satisfies Preset.ThemeConfig,
 };
 

@@ -1,8 +1,8 @@
-import type { AuthProvider, Region } from "./auth-provider";
+import type { AuthProvider, Region } from './auth-provider';
 
 export type StaticAuthConfig = {
-  token: string,
-}
+  token: string;
+};
 
 export class StaticAuthProvider implements AuthProvider {
   private _config: StaticAuthConfig;
@@ -12,6 +12,6 @@ export class StaticAuthProvider implements AuthProvider {
   }
 
   public getToken(region: Region): Promise<string> {
-    return Promise.resolve(this._config.token)
+    return Promise.resolve(this._config.token);
   }
 }

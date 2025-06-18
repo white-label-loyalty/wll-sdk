@@ -14,22 +14,24 @@ export class HttpBase {
   protected async invoke<T>(
     endpoint: string,
     options: {
-      method: string,
-      parameters?: Record<string, string>,
-      query?: Record<string, any>
-      headers?: Record<string, string>
-      body?: any,
-    }
+      method: string;
+      parameters?: Record<string, string>;
+      query?: Record<string, any>;
+      headers?: Record<string, string>;
+      body?: any;
+    },
   ): Promise<T> {
     const searchParams = new URLSearchParams();
     Object.entries(options.query ?? {}).forEach(([key, value]) => {
       searchParams.set(key, value.toString());
-    })
-    let url = `${this._baseUrl}${endpoint}` + (options?.query?.length > 0 ? "?" + searchParams.toString() : '');
+    });
+    let url =
+      `${this._baseUrl}${endpoint}` +
+      (options?.query?.length > 0 ? '?' + searchParams.toString() : '');
 
     const region = this._baseUrl.includes('.us.') ? 'US' : 'EU';
     let authorization = `Bearer ${await this._authProvider.getToken(
-      Region[region as keyof typeof Region]
+      Region[region as keyof typeof Region],
     )}`;
 
     if (options.headers?.['Authorization']) {
@@ -44,8 +46,8 @@ export class HttpBase {
       Authorization: authorization,
       ...options?.headers,
     };
-    if(options.parameters) {
-      for(const [key, value] of Object.entries(options.parameters)) {
+    if (options.parameters) {
+      for (const [key, value] of Object.entries(options.parameters)) {
         url = url.replace(`{${key}}`, value);
       }
     }
@@ -61,7 +63,7 @@ export class HttpBase {
         return Promise.reject(
           await response.json().then((data) => {
             return data;
-          })
+          }),
         );
       }
       return response.json() as Promise<T>;
