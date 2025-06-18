@@ -1,7 +1,7 @@
 import type { OpenAPI, OpenAPIV3 } from "openapi-types";
 import { Generator } from "./base-generator";
 import { generateTypes } from "oatyp/build/src/types";
-import { Project, Directory } from "ts-morph";
+import { Project, Directory, Scope } from "ts-morph";
 import invariant from "invariant";
 import { compile } from "json-schema-to-typescript";
 import path from "path";
@@ -91,145 +91,221 @@ export class TypescriptGenerator extends Generator {
       return controller;
     });
 
-    const rewardSdk = this.project.createWriter();
-    rewardSdk.writeLine("import { AuthProvider } from './auth-provider';");
+    const rewardSdk = this.rootDir.createSourceFile("index.ts", undefined, { overwrite: true });
 
-    rewardSdk.blankLine();
-    rewardSdk.writeLine("type BaseUrl = 'https://api.staging.rewards.wlloyalty.net/v1' | 'https://api.rewards.wlloyalty.net/v1' | 'https://api.staging.rewards.us.wlloyalty.net/v1' | 'https://api.rewards.us.wlloyalty.net/v1' | (string & {});")
-    rewardSdk.writeLine("export type RewardSdkConfig = ").inlineBlock(() => {
-      rewardSdk.writeLine('apiKey: string,')
-      rewardSdk.writeLine('authProvider: AuthProvider,')
-      rewardSdk.writeLine('baseUrl: BaseUrl')
+    rewardSdk.addImportDeclarations([
+      {
+        moduleSpecifier: './auth-provider',
+        namedImports: ['AuthProvider'],
+      },
+      {
+        moduleSpecifier: './admin-auth-provider',
+        namedImports: ['AdminAuthProvider']
+      },
+      {
+        moduleSpecifier: './static-auth-provider',
+        namedImports: ['StaticAuthProvider']
+      }
+    ]);
+
+    rewardSdk.addExportDeclaration({
+      namedExports: ['AdminAuthProvider', 'StaticAuthProvider', 'AuthProvider']
     })
-    rewardSdk.blankLine();
 
-    rewardSdk.writeLine("export class WLLRewardsSdk {");
-    rewardSdk.setIndentationLevel(rewardSdk.getIndentationLevel() + 1);
-    rewardSdk.writeLine("private config: RewardSdkConfig;");
-    rewardSdk.blankLine();
+    rewardSdk.addTypeAlias({
+      name: 'BaseUrl',
+      type: `'https://api.staging.rewards.wlloyalty.net/v1' | 'https://api.rewards.wlloyalty.net/v1' | 'https://api.staging.rewards.us.wlloyalty.net/v1' | 'https://api.rewards.us.wlloyalty.net/v1' | (string & {});`
+    });
 
+    rewardSdk.addTypeAlias({
+      name: 'RewardSdkConfig',
+      type: (writer) => {
+        writer.inlineBlock(() => {
+          writer.writeLine('apiKey: string,')
+          writer.writeLine('authProvider: AuthProvider,')
+          writer.writeLine('baseUrl: BaseUrl')
+        })
+      },
+      isExported: true
+    });
+
+    const sdkClass = rewardSdk.addClass({
+      name: 'WLLRewardsSdk',
+      properties: [{
+        name: 'config',
+        type: 'RewardSdkConfig',
+        scope: Scope.Private
+      }],
+      isExported: true
+    });
+
+    const ctor = sdkClass.addConstructor({
+      parameters: [{
+        name: 'config',
+        type: 'RewardSdkConfig'
+      }],
+      statements: 'this.config = config;'
+    })
 
     for(const [controller, methods] of Object.entries(groupedMethods)) {
+      sdkClass.addProperty({
+        name: controller.charAt(0).toLowerCase() + controller.substring(1),
+        type: controller,
+        scope: Scope.Public
+      });
+      rewardSdk.addImportDeclaration({
+        moduleSpecifier: `./controllers/${controller}`,
+        namedImports: [controller]
+      });
+      ctor.addStatements(`this.${controller.charAt(0).toLowerCase() + controller.substring(1)} = new ${controller}(config.authProvider, config.baseUrl, config.apiKey);`)
+
       const file = this.rootDir.createSourceFile(`controllers/${controller}.ts`, undefined, { overwrite: true });
-      const codeWriter = this.project.createWriter();
-      codeWriter.writeLine(`import * as definitions from "../definitions"`);
-      codeWriter.writeLine("import { AuthProvider } from '../auth-provider'");
-      codeWriter.writeLine("import { HttpBase } from '../http-base'")
-      codeWriter.writeLine(`export class ${controller} extends HttpBase {`)
-      codeWriter.setIndentationLevel(codeWriter.getIndentationLevel() + 1);
-
-      for(const method of methods!) {
-        const endpoints: [string, OpenAPIV3.OperationObject][] = Object.entries(method.endpoints).filter(([key]) => ["post", "get", "put", "patch", "delete", "options", "head"].includes(key)) as any;
-        for(const [httpMethod, endpoint] of endpoints) {
-          const methodName = endpoint.operationId?.split(".")[1];
-          invariant(methodName, "Method name must be defined");
-          let methodParameterString = '';
-          let isBody = false;
-          if(endpoint.requestBody && "content" in endpoint.requestBody) {
-            const schema = endpoint.requestBody.content["application/json"]?.schema
-            if(schema && Object.keys(schema).length > 0) {
-              if("$ref" in schema) {
-                const end = schema.$ref.split("/").pop();
-                methodParameterString += `body: definitions.${end}`
-              } else {
-                methodParameterString += "body: any"
-              }
-              isBody = true;
-            }
-          }
-          if(endpoint.parameters) {
-            const parameters: Record<string, OpenAPIV3.ParameterObject[]> = Object.groupBy(endpoint.parameters.filter(i => "name" in i ? i.name !== "X-Api-Key" && i.name !== 'Authorization' : true), (item) => "in" in item ? item.in : "ref") as any;
-            if(parameters.path && parameters.path.length > 0) {
-              const parameterType = await this.generateParametersType("headers", parameters.path);
-              methodParameterString += !methodParameterString ? "parameters: " + parameterType : ", parameters: " + parameterType;
-            }
-            if(parameters.header && parameters.header.length > 0) {
-              const headersType = await this.generateParametersType("headers", parameters.header);
-              methodParameterString += !methodParameterString ? "headers: " + headersType : ", headers: " + headersType;
-            }
-            if(parameters.query && parameters.query.length > 0) {
-              const queryType = await this.generateParametersType("headers", parameters.query);
-              methodParameterString += !methodParameterString ? "query: " +  queryType: ", query: " + queryType;
-            }
-          }
-
-          const successResponse = endpoint.responses?.["200"];
-          let responseType = 'any';
-          if(successResponse && "content" in successResponse) {
-            const schema = successResponse.content?.["application/json"]?.schema
-            if(schema && Object.keys(schema).length > 0) {
-              if("$ref" in schema) {
-                const end = schema.$ref.split("/").pop();
-                responseType = `definitions.${end}`
-              }
-            }
-          }
-
-          codeWriter.writeLine(`public async ${methodName}(${methodParameterString}): Promise<${responseType}>`).inlineBlock(() => {
-            codeWriter.writeLine(`return this.invoke<${responseType}>('${method.path}', {`).indent(() => {
-              codeWriter.writeLine(`method: '${httpMethod.toUpperCase()}',`);
-              if(endpoint.parameters) {
-                const parameters: Record<string, OpenAPIV3.ParameterObject[]> = Object.groupBy(endpoint.parameters.filter(i => "name" in i ? i.name !== "X-Api-Key" && i.name !== 'Authorization' : true), (item) => "in" in item ? item.in : "ref") as any;
-                if(parameters.path && parameters.path.length > 0) {
-                  codeWriter.writeLine(`parameters,`);
-                }
-                if(parameters.header && parameters.header.length > 0) {
-                  codeWriter.writeLine(`headers,`);
-                }
-                if(parameters.query && parameters.query.length > 0) {
-                  codeWriter.writeLine(`query,`);
-                }
-                if(isBody) {
-                  codeWriter.writeLine(`body,`);
-                }
-              }
-            }).writeLine("});")
-          });
-
-          codeWriter.blankLine();
-        }
-      }
-
-      codeWriter.writeLine("constructor(authProvider: AuthProvider, baseUrl: string, apiKey: string)").inlineBlock(() => {
-        codeWriter.writeLine("super(authProvider, baseUrl, apiKey)");
+      file.addImportDeclaration({
+        moduleSpecifier: '../definitions',
+        defaultImport: '* as definitions'
       })
 
-      codeWriter.setIndentationLevel(codeWriter.getIndentationLevel() - 1);
-      codeWriter.writeLine("}")
-      file.insertText(0, codeWriter.toString());
-      rewardSdk.writeLine(`public ${controller.charAt(0).toLowerCase() + controller.substring(1)}: ${controller};`)
-    };
+      file.addImportDeclarations([
+        {
+          moduleSpecifier: '../auth-provider',
+          namedImports: ['AuthProvider']
+        },
+        {
+          moduleSpecifier: '../http-base',
+          namedImports: ['HttpBase']
+        }
+      ]);
 
+      const ctrlClass = file.addClass({
+        name: controller,
+        extends: 'HttpBase',
+        ctors: [{
+          parameters: [
+            {
+              name: 'authProvider',
+              type: 'AuthProvider',
+            },
+            {
+              name: 'baseUrl',
+              type: 'string',
+            },
+            {
+              name: 'apiKey',
+              type: 'string',
+            },
+          ],
+          statements: "super(authProvider, baseUrl, apiKey)"
+        }],
+        isExported: true
+      });
 
-    const importStatements = this.project.createWriter();
+      const endpoints: [string, OpenAPIV3.OperationObject & { path: string }][] = methods?.flatMap(m => 
+        Object.entries(m.endpoints).filter(([key]) => ["post", "get", "put", "patch", "delete", "options", "head"].includes(key)).map(([h, endpoint]) => ([
+          h,
+          {
+            ...endpoint as any,
+            path: m.path
+          }
+        ]))
+      ) as any;
 
-    rewardSdk.writeLine("constructor(config: RewardSdkConfig)").inlineBlock(() => {
-      rewardSdk.writeLine("this.config = config;");
-      for(const [controller] of Object.entries(groupedMethods)) {
-        importStatements.writeLine(`import { ${controller} } from './controllers/${controller}'`);
-        rewardSdk.writeLine(`this.${controller.charAt(0).toLowerCase() + controller.substring(1)} = new ${controller}(config.authProvider, config.baseUrl, config.apiKey);`)
+      for(const [httpMethod, endpoint] of endpoints) {
+        const methodName = endpoint.operationId?.split(".")[1];
+        invariant(methodName, 'Method name must be defined');
+
+        const method = ctrlClass.addMethod({
+          name: methodName,
+          isAsync: true,
+          scope: Scope.Public,
+          returnType: 'Promise<any>'
+        });
+
+        let isBody = false;
+        if(endpoint.requestBody && 'content' in endpoint.requestBody) {
+          const schema = endpoint.requestBody.content['application/json']?.schema
+          if(schema && Object.keys(schema).length > 0) {
+            const parameter = method.addParameter({
+              name: 'body'
+            })
+
+            if("$ref" in schema) {
+              const end = schema.$ref.split("/").pop();
+              parameter.setType(`definitions.${end}`);
+            } else {
+              parameter.setType('any')
+            }
+            isBody = true
+          }
+        }
+
+        if(endpoint.parameters) {
+          const parameters: Record<string, OpenAPIV3.ParameterObject[]> = Object.groupBy(endpoint.parameters.filter(i => "name" in i ? i.name !== "X-Api-Key" && i.name !== 'Authorization' : true), (item) => "in" in item ? item.in : "ref") as any;
+          if(parameters.path && parameters.path.length > 0) {
+            const parameterType = await this.generateParametersType("headers", parameters.path);
+            method.addParameter({
+              name: 'parameters',
+              type: parameterType
+            })
+          }
+          if(parameters.header && parameters.header.length > 0) {
+            const headersType = await this.generateParametersType("headers", parameters.header);
+            method.addParameter({
+              name: 'headers',
+              type: headersType
+            })
+          }
+          if(parameters.query && parameters.query.length > 0) {
+            const queryType = await this.generateParametersType("headers", parameters.query);
+            method.addParameter({
+              name: 'query',
+              type: queryType
+            })
+          }
+        }
+
+        const successResponse = endpoint.responses?.["200"];
+
+        let returnType = "any";
+        if(successResponse && "content" in successResponse) {
+          const schema = successResponse.content?.["application/json"]?.schema
+          if(schema && Object.keys(schema).length > 0) {
+            if("$ref" in schema) {
+              const end = schema.$ref.split("/").pop();
+              method.setReturnType(`Promise<definitions.${end}>`)
+              returnType = `definitions.${end}`
+            }
+          }
+        }
+
+        method.setBodyText((codeWriter) => {
+          codeWriter.writeLine(`return this.invoke<${returnType}>('${endpoint.path}', {`).indent(() => {
+            codeWriter.writeLine(`method: '${httpMethod.toUpperCase()}',`);
+            if(endpoint.parameters) {
+              const parameters: Record<string, OpenAPIV3.ParameterObject[]> = Object.groupBy(endpoint.parameters.filter(i => "name" in i ? i.name !== "X-Api-Key" && i.name !== 'Authorization' : true), (item) => "in" in item ? item.in : "ref") as any;
+              if(parameters.path && parameters.path.length > 0) {
+                codeWriter.writeLine(`parameters,`);
+              }
+              if(parameters.header && parameters.header.length > 0) {
+                codeWriter.writeLine(`headers,`);
+              }
+              if(parameters.query && parameters.query.length > 0) {
+                codeWriter.writeLine(`query,`);
+              }
+              if(isBody) {
+                codeWriter.writeLine(`body,`);
+              }
+            }
+          }).writeLine("});")
+        })
       }
-    })
 
-    rewardSdk.setIndentationLevel(rewardSdk.getIndentationLevel() - 1);
-    rewardSdk.writeLine("}");
-    rewardSdk.blankLine();
-
-    this.rootDir.createSourceFile("auth-provider.ts", await this.getTemplate("auth-provider.ts"), { overwrite: true })
-    this.rootDir.createSourceFile("admin-auth-provider.ts", await this.getTemplate("admin-auth-provider.ts"), { overwrite: true })
-    importStatements.writeLine(`import { AdminAuthProvider } from './admin-auth-provider'`)
-    this.rootDir.createSourceFile("static-auth-provider.ts", await this.getTemplate("static-auth-provider.ts"), { overwrite: true })
-    importStatements.writeLine(`import { StaticAuthProvider } from './static-auth-provider'`)
-
-    this.rootDir.createSourceFile("http-base.ts", await this.getTemplate("http-base.ts"), { overwrite: true })
-
-    this.rootDir.createSourceFile("package.json", await this.getTemplate("package.json"), { overwrite: true })
-    this.rootDir.createSourceFile("tsconfig.json", await this.getTemplate("tsconfig.json"), { overwrite: true })
-
-
-    importStatements.blankLine();
-    rewardSdk.writeLine("export { AdminAuthProvider, StaticAuthProvider, AuthProvider }")
-    this.rootDir.createSourceFile("index.ts", importStatements.toString() + rewardSdk.toString(), { overwrite: true });
+      this.rootDir.createSourceFile("http-base.ts", await this.getTemplate("http-base.ts"), { overwrite: true })
+      this.rootDir.createSourceFile("package.json", await this.getTemplate("package.json"), { overwrite: true })
+      this.rootDir.createSourceFile("tsconfig.json", await this.getTemplate("tsconfig.json"), { overwrite: true })
+      this.rootDir.createSourceFile("auth-provider.ts", await this.getTemplate("auth-provider.ts"), { overwrite: true })
+      this.rootDir.createSourceFile("admin-auth-provider.ts", await this.getTemplate("admin-auth-provider.ts"), { overwrite: true })
+      this.rootDir.createSourceFile("static-auth-provider.ts", await this.getTemplate("static-auth-provider.ts"), { overwrite: true })
+    }
 
     await this.project.save();
     await this.build();
