@@ -29,15 +29,15 @@ jobs:
       - name: Upload Build Artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: build
+          path: website/build
 
   deploy:
     name: Deploy to GitHub Pages
     needs: build
 
     permissions:
-      pages: write # to deploy to Pages
-      id-token: write # to verify the deployment originates from an appropriate source
+      pages: write
+      id-token: write
 
     environment:
       name: github-pages
