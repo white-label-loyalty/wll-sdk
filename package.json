@@ -17,6 +17,7 @@
     "topicSeparator": " "
   },
   "dependencies": {
+    "@docusaurus/remark-plugin-npm2yarn": "^3.8.1",
     "@oclif/core": "^4.2.10",
     "@oclif/plugin-plugins": "^5",
     "invariant": "^2.2.4",

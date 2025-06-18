@@ -228,7 +228,7 @@ export class TypescriptGenerator extends Generator {
 
 
     importStatements.blankLine();
-    rewardSdk.writeLine("export { AdminAuthProvider, StaticAuthProvider }")
+    rewardSdk.writeLine("export { AdminAuthProvider, StaticAuthProvider, AuthProvider }")
     this.rootDir.createSourceFile("index.ts", importStatements.toString() + rewardSdk.toString(), { overwrite: true });
 
     await this.project.save();
