@@ -15,16 +15,6 @@ jobs:
         env:
           API_KEY: ${{ secrets.API_KEY }}
         run: bun dev gen https://api.staging.rewards.wlloyalty.net/v1/openapi.json -k "$API_KEY"
-
-  publish-npm:
-    needs: build
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
-        working-directory: ./sdk/typescript
-    steps:
-      - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: latest
@@ -32,3 +22,5 @@ jobs:
       - run: npm publish --access public ./wll-rewards-sdk.tgz
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        working-directory: ./sdk/typescript
+      
