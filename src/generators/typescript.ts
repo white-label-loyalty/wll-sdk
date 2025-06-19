@@ -216,7 +216,7 @@ export class TypescriptGenerator extends Generator {
         },
         {
           moduleSpecifier: '../http-base',
-          namedImports: ['HttpBase'],
+          namedImports: ['HttpBase', 'RequestParams'],
         },
       ]);
 
@@ -281,24 +281,29 @@ export class TypescriptGenerator extends Generator {
           returnType: 'Promise<any>',
         });
 
-        let isBody = false;
+        const parameters = method.addParameter({
+          name: 'parameters',
+        })
+
+        let bodyType = 'undefined';
+        let parametersType = 'undefined';
+        let headersType = 'undefined';
+        let queryType = 'undefined';
+
         if (endpoint.requestBody && 'content' in endpoint.requestBody) {
           const schema =
             endpoint.requestBody.content['application/json']?.schema;
           if (schema && Object.keys(schema).length > 0) {
-            const parameter = method.addParameter({
-              name: 'body',
-            });
-
             if ('$ref' in schema) {
               const end = schema.$ref.split('/').pop();
-              parameter.setType(`definitions.${end}`);
+              bodyType = `definitions.${end}`;
             } else {
-              parameter.setType('any');
+              bodyType = 'any'
             }
-            isBody = true;
           }
         }
+
+        
 
         if (endpoint.parameters) {
           const parameters: Record<string, OpenAPIV3.ParameterObject[]> =
@@ -311,36 +316,26 @@ export class TypescriptGenerator extends Generator {
               (item) => ('in' in item ? item.in : 'ref'),
             ) as any;
           if (parameters.path && parameters.path.length > 0) {
-            const parameterType = await this.generateParametersType(
+            parametersType = await this.generateParametersType(
               'headers',
               parameters.path,
             );
-            method.addParameter({
-              name: 'parameters',
-              type: parameterType,
-            });
           }
           if (parameters.header && parameters.header.length > 0) {
-            const headersType = await this.generateParametersType(
+            headersType = await this.generateParametersType(
               'headers',
               parameters.header,
             );
-            method.addParameter({
-              name: 'headers',
-              type: headersType,
-            });
           }
           if (parameters.query && parameters.query.length > 0) {
-            const queryType = await this.generateParametersType(
+            queryType = await this.generateParametersType(
               'headers',
               parameters.query,
             );
-            method.addParameter({
-              name: 'query',
-              type: queryType,
-            });
           }
         }
+
+        parameters.setType(`RequestParams<${parametersType}, ${queryType}, ${headersType}, ${bodyType}>`);
 
         const successResponse = endpoint.responses?.['200'];
 
@@ -363,29 +358,7 @@ export class TypescriptGenerator extends Generator {
             )
             .indent(() => {
               codeWriter.writeLine(`method: '${httpMethod.toUpperCase()}',`);
-              if (endpoint.parameters) {
-                const parameters: Record<string, OpenAPIV3.ParameterObject[]> =
-                  Object.groupBy(
-                    endpoint.parameters.filter((i) =>
-                      'name' in i
-                        ? i.name !== 'X-Api-Key' && i.name !== 'Authorization'
-                        : true,
-                    ),
-                    (item) => ('in' in item ? item.in : 'ref'),
-                  ) as any;
-                if (parameters.path && parameters.path.length > 0) {
-                  codeWriter.writeLine(`parameters,`);
-                }
-                if (parameters.header && parameters.header.length > 0) {
-                  codeWriter.writeLine(`headers,`);
-                }
-                if (parameters.query && parameters.query.length > 0) {
-                  codeWriter.writeLine(`query,`);
-                }
-                if (isBody) {
-                  codeWriter.writeLine(`body,`);
-                }
-              }
+              codeWriter.writeLine(`parameters,`)
             })
             .writeLine('});');
         });

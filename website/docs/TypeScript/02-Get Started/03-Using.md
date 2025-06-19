@@ -37,7 +37,7 @@ const wllSdk = new WLLRewardsSdk({
   baseUrl: 'https://api.staging.rewards.wlloyalty.net/v1',
 });
 
-const rewards = await wllSdk.reward.list({});
+const rewards = await wllSdk.reward.list();
 
 console.log(rewards); // Output: { data: [...your rewards] }
 ```
