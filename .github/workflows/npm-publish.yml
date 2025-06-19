@@ -29,7 +29,6 @@ jobs:
         with:
           node-version: latest
           registry-url: 'https://registry.npmjs.org'
-      - run: npx -y tsc --build
-      - run: npm publish --access public
+      - run: npm publish --access public ./wll-rewards-sdk.tgz
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
