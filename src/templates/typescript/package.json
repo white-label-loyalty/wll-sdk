@@ -1,7 +1,7 @@
 {
-  "name": "wll-rewards-sdk",
+  "name": "@wll-sdk/api",
   "version": "0.0.1",
-  "description": "An SDK for the WLL rewards service",
+  "description": "An SDK for the WLL API Services",
   "main": "dist/index.js",
   "author": "White Label Loyalty",
   "license": "MIT"
