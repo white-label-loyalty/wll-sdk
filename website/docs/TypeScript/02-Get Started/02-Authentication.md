@@ -7,7 +7,7 @@ In White Label Loyalty services we typically have two authentication methods. "A
 Admin authentication is provided via the `AdminAuthProvider`.
 
 ```ts
-import { AdminAuthProvider } from 'wll-rewards-sdk';
+import { AdminAuthProvider } from '@wll-sdk/api';
 ```
 
 ### Example
@@ -15,7 +15,7 @@ import { AdminAuthProvider } from 'wll-rewards-sdk';
 Here is a minimal example of initializing the WLL Rewards SDK with an `AdminAuthProvider`
 
 ```ts
-import { WLLRewardsSdk, AdminAuthProvider } from 'wll-rewards-sdk';
+import { WLLRewardsSdk, AdminAuthProvider } from '@wll-sdk/api';
 
 new WLLRewardsSdk({
   apiKey: '<your-api-key>',
@@ -48,7 +48,7 @@ The current regions supported by the SDK are:
 Tenant authentication is provided via the `StaticAuthProvider`.
 
 ```ts
-import { StaticAuthProvider } from 'wll-rewards-sdk';
+import { StaticAuthProvider } from '@wll-sdk/api';
 ```
 
 The `StaticAuthProvider` is a simple implementation of `AuthProvider` that takes a token in its constructor and only returns that token. Essentially just a constant variable of a token. This can be used for tenant authentication after completing your authentication flow, alternatively it can be used for admin authentication if an admin token is stored in the provider.
@@ -58,7 +58,7 @@ The `StaticAuthProvider` is a simple implementation of `AuthProvider` that takes
 Here is a minimal example of initializing the WLL Rewards SDK with a `StaticAuthProvider`
 
 ```ts
-import { WLLRewardsSdk, StaticAuthProvider } from 'wll-rewards-sdk';
+import { WLLRewardsSdk, StaticAuthProvider } from '@wll-sdk/api';
 
 async function tenantTokenFlow(): Promise<string> {
   // Your implementation.
@@ -96,7 +96,7 @@ abstract class AuthProvider {
 Here is a minimal example of a custom implemented auth provider.
 
 ```ts
-import { WLLRewardsSdk, AuthProvider } from 'wll-rewards-sdk';
+import { WLLRewardsSdk, AuthProvider } from '@wll-sdk/api';
 import { fetchRemoteToken } from '../path/to/fetchRemoteToken';
 
 class RemoteAuthProvider implements AuthProvider {

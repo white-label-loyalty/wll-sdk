@@ -7,7 +7,7 @@ For authentication examples see the [Authentication guide](./02-Authentication.m
 ## Initializing the SDK
 
 ```ts
-import { WLLRewardsSdk, StaticAuthProvider } from 'wll-rewards-sdk';
+import { WLLRewardsSdk, StaticAuthProvider } from '@wll-sdk/api';
 
 const wllSdk = new WLLRewardsSdk({
   apiKey: '<your-api-key>',
@@ -27,7 +27,7 @@ For example: `/rewards` would become `wllSdk.reward.list`
 Here is a minimal example of initializing the SDK and fetching a list of rewards.
 
 ```ts
-import { WLLRewardsSdk, StaticAuthProvider } from 'wll-rewards-sdk';
+import { WLLRewardsSdk, StaticAuthProvider } from '@wll-sdk/api';
 
 const wllSdk = new WLLRewardsSdk({
   apiKey: '<your-api-key>',
