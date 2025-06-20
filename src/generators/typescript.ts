@@ -414,7 +414,7 @@ export class TypescriptGenerator extends Generator {
       );
       this.rootDir.createSourceFile(
         'README.md',
-        await this.getTemplate('README.md'),
+        await this.getTemplate('readme.md'),
         { overwrite: true },
       );
     }
