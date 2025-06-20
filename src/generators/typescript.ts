@@ -2,7 +2,7 @@ import type { OpenAPI, OpenAPIV3 } from 'openapi-types';
 import { Generator } from './base-generator';
 import { generateTypes } from 'oatyp/build/src/types';
 import { Project, Directory, Scope } from 'ts-morph';
-import { Project as OldProject } from "oatyp/node_modules/ts-morph";
+import { Project as OldProject } from 'oatyp/node_modules/ts-morph';
 import invariant from 'invariant';
 import { compile } from 'json-schema-to-typescript';
 import path from 'path';
@@ -21,17 +21,19 @@ export class TypescriptGenerator extends Generator {
   }
 
   private async generateTypes(filename: string = 'definitions.ts') {
-    
-
-    const oldFile = new OldProject().createSourceFile("fake");
+    const oldFile = new OldProject().createSourceFile('fake');
 
     await generateTypes(oldFile, this.apiSpec, {
       addReadonlyWriteonlyModifiers: false,
     });
 
-    const file = this.rootDir.createSourceFile(filename, oldFile.getFullText(), {
-      overwrite: true,
-    });
+    const file = this.rootDir.createSourceFile(
+      filename,
+      oldFile.getFullText(),
+      {
+        overwrite: true,
+      },
+    );
   }
 
   private async generateParametersType(
@@ -289,7 +291,7 @@ export class TypescriptGenerator extends Generator {
 
         const parameters = method.addParameter({
           name: 'parameters',
-        })
+        });
 
         let bodyType = 'undefined';
         let parametersType = 'undefined';
@@ -304,12 +306,10 @@ export class TypescriptGenerator extends Generator {
               const end = schema.$ref.split('/').pop();
               bodyType = `definitions.${end}`;
             } else {
-              bodyType = 'any'
+              bodyType = 'any';
             }
           }
         }
-
-        
 
         if (endpoint.parameters) {
           const parameters: Record<string, OpenAPIV3.ParameterObject[]> =
@@ -343,12 +343,12 @@ export class TypescriptGenerator extends Generator {
 
         const fakeParameter = method.addParameter({
           name: 'todelete',
-          type: 'undefined'
+          type: 'undefined',
         });
 
-        const type = `RequestParams<${parametersType}, ${queryType}, ${headersType}, ${bodyType}>`
-        if(fakeParameter.getType().isAssignableTo(parameters.getType())) {
-          parameters.setType(type + " | undefined");
+        const type = `RequestParams<${parametersType}, ${queryType}, ${headersType}, ${bodyType}>`;
+        if (fakeParameter.getType().isAssignableTo(parameters.getType())) {
+          parameters.setType(type + ' | undefined');
         } else {
           parameters.setType(type);
         }
@@ -376,7 +376,7 @@ export class TypescriptGenerator extends Generator {
             )
             .indent(() => {
               codeWriter.writeLine(`method: '${httpMethod.toUpperCase()}',`);
-              codeWriter.writeLine(`parameters,`)
+              codeWriter.writeLine(`parameters,`);
             })
             .writeLine('});');
         });
@@ -410,6 +410,11 @@ export class TypescriptGenerator extends Generator {
       this.rootDir.createSourceFile(
         'static-auth-provider.ts',
         await this.getTemplate('static-auth-provider.ts'),
+        { overwrite: true },
+      );
+      this.rootDir.createSourceFile(
+        'README.md',
+        await this.getTemplate('README.md'),
         { overwrite: true },
       );
     }

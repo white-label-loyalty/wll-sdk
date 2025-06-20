@@ -58,10 +58,17 @@ export class HttpBase {
     endpoint: string,
     options: {
       method: string;
-      parameters?: any
+      parameters?: any;
     },
   ): Promise<T> {
-    const parameters = options.parameters as RequestParams<Record<string, string>, Record<string, string>, Record<string, string>, Record<string, string>> | undefined
+    const parameters = options.parameters as
+      | RequestParams<
+          Record<string, string>,
+          Record<string, string>,
+          Record<string, string>,
+          Record<string, string>
+        >
+      | undefined;
     const searchParams = new URLSearchParams();
     Object.entries(parameters?.query ?? {}).forEach(([key, value]) => {
       searchParams.set(key, value.toString());
@@ -90,7 +97,7 @@ export class HttpBase {
     };
     if (parameters) {
       for (const [key, value] of Object.entries(parameters)) {
-        if(["query", "headers", "body"].includes(key)) continue;
+        if (['query', 'headers', 'body'].includes(key)) continue;
 
         url = url.replace(`{${key}}`, value as string);
       }
