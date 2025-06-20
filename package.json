@@ -22,7 +22,7 @@
     "invariant": "^2.2.4",
     "json-schema-to-typescript": "^15.0.4",
     "oatyp": "^1.0.0-alpha.33",
-    "ts-morph": "^11.0.3"
+    "ts-morph": "^26.0.0"
   },
   "devDependencies": {
     "@eslint/compat": "^1",

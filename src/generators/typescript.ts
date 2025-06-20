@@ -2,6 +2,7 @@ import type { OpenAPI, OpenAPIV3 } from 'openapi-types';
 import { Generator } from './base-generator';
 import { generateTypes } from 'oatyp/build/src/types';
 import { Project, Directory, Scope } from 'ts-morph';
+import { Project as OldProject } from "oatyp/node_modules/ts-morph";
 import invariant from 'invariant';
 import { compile } from 'json-schema-to-typescript';
 import path from 'path';
@@ -20,11 +21,16 @@ export class TypescriptGenerator extends Generator {
   }
 
   private async generateTypes(filename: string = 'definitions.ts') {
-    const file = this.rootDir.createSourceFile(filename, undefined, {
-      overwrite: true,
-    });
-    await generateTypes(file, this.apiSpec, {
+    
+
+    const oldFile = new OldProject().createSourceFile("fake");
+
+    await generateTypes(oldFile, this.apiSpec, {
       addReadonlyWriteonlyModifiers: false,
+    });
+
+    const file = this.rootDir.createSourceFile(filename, oldFile.getFullText(), {
+      overwrite: true,
     });
   }
 
@@ -335,7 +341,19 @@ export class TypescriptGenerator extends Generator {
           }
         }
 
-        parameters.setType(`RequestParams<${parametersType}, ${queryType}, ${headersType}, ${bodyType}>`);
+        const fakeParameter = method.addParameter({
+          name: 'todelete',
+          type: 'undefined'
+        });
+
+        const type = `RequestParams<${parametersType}, ${queryType}, ${headersType}, ${bodyType}>`
+        if(fakeParameter.getType().isAssignableTo(parameters.getType())) {
+          parameters.setType(type + " | undefined");
+        } else {
+          parameters.setType(type);
+        }
+
+        fakeParameter.remove();
 
         const successResponse = endpoint.responses?.['200'];
 
