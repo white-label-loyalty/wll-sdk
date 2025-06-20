@@ -68,8 +68,13 @@ export default class Generate extends Command {
       default:
       case 'typescript':
         this.log('Generating typescript SDK...');
-        const generator = new TypescriptGenerator(spec);
-        await generator.generateSdk();
+        try {
+          const generator = new TypescriptGenerator(spec);
+          await generator.generateSdk();
+        } catch(err) {
+          console.log(err)
+        }
+        
         break;
     }
   }
