@@ -289,10 +289,6 @@ export class TypescriptGenerator extends Generator {
           returnType: 'Promise<any>',
         });
 
-        const parameters = method.addParameter({
-          name: 'parameters',
-        });
-
         let bodyType = 'undefined';
         let parametersType = 'undefined';
         let headersType = 'undefined';
@@ -341,19 +337,21 @@ export class TypescriptGenerator extends Generator {
           }
         }
 
-        const fakeParameter = method.addParameter({
-          name: 'todelete',
-          type: 'undefined',
+
+        const parameters = method.addParameter({
+          name: 'parameters',
         });
-
         const type = `RequestParams<${parametersType}, ${queryType}, ${headersType}, ${bodyType}>`;
-        if (fakeParameter.getType().isAssignableTo(parameters.getType())) {
-          parameters.setType(type + ' | undefined');
-        } else {
-          parameters.setType(type);
-        }
+        parameters.setType(type);
 
-        fakeParameter.remove();
+        if(parameters.getType().getUnionTypes().map(t => t.getText()).includes("undefined")) {
+          parameters.remove();
+          method.addParameter({
+            name: 'parameters',
+            hasQuestionToken: true,
+            type,
+          })
+        }
 
         const successResponse = endpoint.responses?.['200'];
 

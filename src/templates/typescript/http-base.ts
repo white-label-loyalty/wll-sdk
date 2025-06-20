@@ -21,17 +21,17 @@ type BaseParams<
   (undefined extends QueryParams
     ? {}
     : {
-        query: QueryParams;
+        query: OptionalIfAllOptional<QueryParams>;
       }) &
   (undefined extends HeaderParams
     ? {}
     : {
-        headers: HeaderParams;
+        headers: OptionalIfAllOptional<HeaderParams>;
       }) &
   (undefined extends Body
     ? {}
     : {
-        body: Body;
+        body: OptionalIfAllOptional<Body>;
       });
 
 export type RequestParams<
