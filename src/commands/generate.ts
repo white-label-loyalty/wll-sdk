@@ -73,6 +73,7 @@ export default class Generate extends Command {
           await generator.generateSdk();
         } catch(err) {
           console.log(err)
+          throw err;
         }
         
         break;
