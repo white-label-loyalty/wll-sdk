@@ -2,7 +2,7 @@
 
 ## Get Started
 
-To get started with the WLL API SDK check out the [docs]("https://white-label-loyalty.github.io/wll-sdk/TypeScript/intro")
+To get started with the WLL API SDK check out the [docs](https://white-label-loyalty.github.io/wll-sdk/TypeScript/intro)
 
 ## Installation
 
