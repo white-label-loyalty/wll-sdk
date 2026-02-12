@@ -4,6 +4,10 @@
   "version": "0.0.0",
   "author": "MW & JJ",
   "bugs": "https://github.com/https://bitbucket.org/wlloyalty/wll-sdk-generator/https://bitbucket.org/wlloyalty/wll-sdk-generator/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/white-label-loyalty/wll-sdk"
+  },
   "bin": {
     "generate": "./binz/run.js",
     "@types/bun": "latest",
