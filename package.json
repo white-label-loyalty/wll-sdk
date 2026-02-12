@@ -51,7 +51,6 @@
   },
   "main": "dist/index.js",
   "type": "module",
-  "repository": "https://bitbucket.org/wlloyalty/wll-sdk-generator/",
   "scripts": {
     "build": "shx rm -rf dist && tsc -b",
     "lint": "eslint",
