@@ -24,6 +24,4 @@ jobs:
           node-version: latest
           registry-url: 'https://registry.npmjs.org'
       - run: npm publish --access public ./wll-rewards-sdk.tgz
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         working-directory: ./sdk/typescript
