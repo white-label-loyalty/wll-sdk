@@ -193,6 +193,8 @@ export class TypescriptGenerator extends Generator {
       statements: 'this.config = config;',
     });
 
+    const packageJsonTemplate = await this.getPackageJsonTemplate();
+
     for (const [controller, methods] of Object.entries(groupedMethods)) {
       sdkClass.addProperty({
         name: controller.charAt(0).toLowerCase() + controller.substring(1),
@@ -387,7 +389,7 @@ export class TypescriptGenerator extends Generator {
       );
       this.rootDir.createSourceFile(
         'package.json',
-        await this.getTemplate('package.json'),
+        packageJsonTemplate,
         { overwrite: true },
       );
       this.rootDir.createSourceFile(
@@ -425,5 +427,50 @@ export class TypescriptGenerator extends Generator {
     return Bun.file(
       path.join(__dirname, '..', 'templates', 'typescript', name),
     ).text();
+  }
+
+  private async getPackageJsonTemplate() {
+    const packageJson = JSON.parse(await this.getTemplate('package.json')) as {
+      version: string;
+    };
+    packageJson.version = await this.getLatestTagVersion();
+
+    return `${JSON.stringify(packageJson, null, 2)}\n`;
+  }
+
+  private async getLatestTagVersion() {
+    const tagProc = spawn({
+      cmd: ['git', 'tag', '--sort=-creatordate'],
+      stdout: 'pipe',
+      stderr: 'pipe',
+    });
+
+    const [code, stdout, stderr] = await Promise.all([
+      tagProc.exited,
+      new Response(tagProc.stdout).text(),
+      new Response(tagProc.stderr).text(),
+    ]);
+    if (code !== 0) {
+      throw new Error(
+        `Failed to read latest git tag: ${stderr.trim() || stdout.trim()}`,
+      );
+    }
+
+    const latestTag = stdout
+      .split('\n')
+      .map((tag) => tag.trim())
+      .find(Boolean);
+    invariant(
+      latestTag,
+      'No git tags found. Create or fetch a tag before generating the TypeScript SDK package.',
+    );
+
+    const version = latestTag.replace(/^v/, '');
+    invariant(
+      /^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/.test(version),
+      `Latest git tag "${latestTag}" is not a valid package version.`,
+    );
+
+    return version;
   }
 }
