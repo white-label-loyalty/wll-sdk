@@ -35,9 +35,6 @@ export default class Generate extends Command {
       description:
         'The API key to use when fetching the OpenAPI spec (if needed)',
     }),
-    'package-version': Flags.string({
-      description: 'The version or release tag for the generated package',
-    }),
   };
 
   public async run(): Promise<void> {
@@ -72,16 +69,13 @@ export default class Generate extends Command {
       case 'typescript':
         this.log('Generating typescript SDK...');
         try {
-          const generator = new TypescriptGenerator(
-            spec,
-            flags['package-version'],
-          );
+          const generator = new TypescriptGenerator(spec);
           await generator.generateSdk();
-        } catch (err) {
-          console.log(err);
+        } catch(err) {
+          console.log(err)
           throw err;
         }
-
+        
         break;
     }
   }
