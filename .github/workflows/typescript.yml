@@ -16,6 +16,7 @@ jobs:
           fetch-depth: 0
       - uses: oven-sh/setup-bun@v2
       - run: bun install
+      - run: bun test test/package-version.test.ts
       - name: build
         env:
           API_KEY: ${{ secrets.API_KEY }}
